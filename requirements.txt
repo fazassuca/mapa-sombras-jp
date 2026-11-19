@@ -1,0 +1,14 @@
+numpy
+xarray
+dask
+pyproj
+shapely>=2
+geopandas>=1.0
+osmnx>=2.0
+rasterio
+rasterstats
+pystac-client
+planetary-computer
+stackstac
+opencv-python-headless
+tifffile

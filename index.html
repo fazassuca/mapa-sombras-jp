@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de Sombras – João Pessoa</title>
+<meta name="description" content="Painel da sombra de árvores nas ruas de João Pessoa, ano a ano, com busca por rua e pedido de plantio.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#edf4ef;--card:#fff;--tx:#14221a;--mut:#667a6e;--bd:#e3ebe5;--mint:#d7f2e2;--lime:#e4f58b;--ac:#1d7a47;--sh:0 1px 2px rgba(20,34,26,.04),0 10px 28px rgba(20,34,26,.06);--r:20px;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not(.x){--bg:#0e1511;--card:#16201a;--tx:#eaf3ed;--mut:#9db1a5;--bd:#26342b;--mint:#1c3b2b;--ac:#5fd38d;--sh:none;color-scheme:dark}}
+body.hc{--bg:#000;--card:#000;--tx:#fff;--mut:#fff;--bd:#fff;--mint:#000;--ac:#ffe600;--sh:none}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--tx);font:500 15px/1.55 Manrope,system-ui,sans-serif}
+a{color:inherit}
+.skip{position:absolute;left:-999px;top:0;background:var(--lime);color:#14221a;padding:8px 14px;z-index:9999;border-radius:0 0 12px 0}.skip:focus{left:0}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;padding:22px 16px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;margin:0 8px 18px}
+.logo i{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--lime);color:#14221a;font-style:normal}
+.nav{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;text-decoration:none;color:var(--mut);font-weight:600}
+.nav:hover{background:var(--card)}.nav.on{background:var(--lime);color:#14221a}
+.side h3{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);margin:20px 14px 6px}
+.a11y{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px}
+button,select,input[type=number]{font:600 .85rem Manrope,sans-serif;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
+button:hover{border-color:var(--tx)}
+button[aria-pressed=true],button.on{background:var(--lime);color:#14221a;border-color:var(--lime)}
+main{padding:22px 26px 56px;min-width:0;outline:0}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.top h1{font-size:1.6rem;font-weight:800;margin:0;letter-spacing:-.02em;margin-right:auto}
+.sbox{position:relative;flex:1 1 320px;max-width:460px}
+.sbox input{width:100%;font:600 .95rem Manrope,sans-serif;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:11px 16px 11px 42px;min-height:46px}
+.sbox:before{content:"🔎";position:absolute;left:15px;top:11px;font-size:.95rem}
+.sug{position:absolute;left:0;right:0;top:52px;z-index:2000;list-style:none;margin:0;padding:6px;background:var(--card);border:1px solid var(--bd);border-radius:18px;box-shadow:var(--sh);display:grid;gap:2px;max-height:320px;overflow:auto}
+.sug:empty{display:none}.sug button{width:100%;text-align:left;border:0;border-radius:12px;background:transparent;display:flex;justify-content:space-between;gap:8px}.sug button:hover{background:var(--mint)}
+.cta-top{background:var(--lime);color:#14221a;border-color:var(--lime);font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:999px}
+.card{background:var(--card);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);border:1px solid var(--bd);min-width:0}
+.card h2{font-size:1.02rem;margin:0 0 10px;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h2 small{font-weight:600}
+small,.mut{color:var(--mut);font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.kpi:first-child{background:var(--mint);border-color:transparent}
+.kpi .kh{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--mut);font-weight:700}
+.kpi .kh i{width:30px;height:30px;border-radius:10px;background:var(--card);display:grid;place-items:center;font-style:normal;font-size:.9rem}
+.kpi b{display:block;font-size:2rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin:8px 0 6px}
+.pill{display:inline-block;font-size:.72rem;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--lime);color:#14221a}.pill.neg{background:#ffd3d3}
+.grid{display:grid;gap:16px;margin-bottom:16px}
+.g1{grid-template-columns:minmax(0,1.9fr) minmax(0,1fr)}.g2{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr)}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.tools label{font-size:.85rem;display:flex;gap:6px;align-items:center}
+#map{height:540px;border-radius:16px;background:#e5ece6;border:1px solid var(--bd)}
+.slider{display:flex;align-items:center;gap:10px;margin-top:10px}.slider input{flex:1;accent-color:var(--ac);height:28px}
+.ano{font-weight:800;font-size:1.3rem;min-width:3.4ch}
+.cta{background:var(--lime);color:#14221a;border:0}
+.cta h2{font-size:1.25rem}.cta p{margin:0 0 12px}.cta ol{margin:0 0 12px;padding-left:20px}.cta li{margin:3px 0}
+.btn{display:block;text-align:center;background:#14221a;color:#fff;font-weight:800;border-radius:14px;padding:13px;text-decoration:none}
+body.hc .btn,body.hc .cta-top,body.hc .cta{background:#ffe600;color:#000}
+.donutw{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.leg{display:grid;gap:6px;font-size:.88rem}.leg i{display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:6px}
+svg text{font:600 11px Manrope,sans-serif;fill:var(--mut)}
+.rank{list-style:none;margin:0;padding:0;display:grid;gap:9px}.rank li{display:grid;gap:4px}.rank .t{display:flex;justify-content:space-between;font-size:.88rem}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bd)}
+.lista{list-style:none;margin:8px 0;padding:0;display:grid;gap:6px;font-size:.88rem}.lista li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--bd);padding-bottom:5px}
+details{border:1px solid var(--bd);border-radius:16px;padding:2px 16px;margin:8px 0;background:var(--card)}
+summary{cursor:pointer;font-weight:800;padding:12px 0}details ul{margin:0 0 12px;padding-left:20px}details li{margin:6px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.field{display:flex;align-items:center;gap:6px;font-size:.88rem}.field input{width:70px;border-radius:12px}
+.leaflet-container{font-family:Manrope,sans-serif}
+.printonly{display:none}
+@media(max-width:1180px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.g1,.g2{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:980px){.shell{grid-template-columns:minmax(0,1fr)}.side{position:sticky;height:auto;top:0;z-index:30;flex-direction:row;align-items:center;overflow-x:auto;padding:8px 10px;background:var(--bg)}.logo{margin:0 8px 0 0}.side h3,.a11y,.nav span{display:none}.nav{padding:8px 12px;white-space:nowrap}main{padding:14px 14px 48px}.g3{grid-template-columns:minmax(0,1fr)}#map{height:420px}}
+@media print{.side,.tools,.slider,.sbox,.cta-top,.noprint,.skip,#map{display:none!important}.shell{display:block}main{padding:0}.printonly{display:block}body{background:#fff;color:#000}.card,.kpi{box-shadow:none}details{break-inside:avoid}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style></head><body>
+<a class="skip" href="#painel">Ir para os dados</a>
+<div class="shell">
+<aside class="side" aria-label="Menu">
+ <div class="logo"><i>🌳</i>Mapa de Sombras</div>
+ <a class="nav on" href="#painel"><i>▦</i><span>Painel</span></a>
+ <a class="nav" href="#mapa"><i>🗺</i><span>Mapa</span></a>
+ <a class="nav" href="#pedido"><i>🌱</i><span>Pedir árvore</span></a>
+ <a class="nav" href="#bairros"><i>📊</i><span>Bairros</span></a>
+ <a class="nav" href="#escolas"><i>🏫</i><span>Escolas</span></a>
+ <a class="nav" href="#cau"><i>🌿</i><span>Áreas verdes (CAU)</span></a>
+ <a class="nav" href="#argumentos"><i>⚖</i><span>Argumentos</span></a>
+ <h3>Acessibilidade</h3>
+ <div class="a11y" role="toolbar" aria-label="Acessibilidade">
+  <button id="fm" aria-label="Diminuir letra">A−</button><button id="fp" aria-label="Aumentar letra">A+</button>
+  <button id="hc" aria-pressed="false">Contraste</button><button id="dl" aria-pressed="false">Daltonismo</button>
+ </div>
+</aside>
+<main id="painel" tabindex="-1">
+ <div class="top">
+  <h1>Painel de sombra das ruas</h1>
+  <div class="sbox noprint"><input id="q" type="search" autocomplete="off" placeholder="Busque sua rua ou bairro" aria-label="Buscar rua ou bairro" aria-controls="sug"><ul id="sug" class="sug"></ul></div>
+  <a class="cta-top noprint" id="ctaTop" href="#" target="_blank" rel="noopener">🌱 Pedir uma árvore</a>
+  <button id="share" class="noprint">Compartilhar</button><button id="zap" class="noprint">WhatsApp</button><button id="imp" class="noprint">Relatório</button>
+ </div>
+ <p class="printonly">Relatório gerado em <span id="hoje"></span>. Link: <span id="lk"></span></p>
+ <section class="kpis" id="kpis" aria-label="Indicadores"></section>
+ <p id="resumo" role="status" aria-live="polite" class="mut" style="margin:-4px 0 16px"></p>
+
+ <section class="grid g1" id="mapa">
+  <div class="card">
+   <h2>Mapa interativo <small id="leg"></small></h2>
+   <div class="tools noprint" role="toolbar" aria-label="Visualização">
+    <button id="m1" aria-pressed="true">Sombra</button><button id="m2" aria-pressed="false">Mudança no tempo</button><button id="b1" aria-pressed="false">Satélite</button>
+    <span id="baseRow" hidden class="field">Comparar com <select id="baseSel" aria-label="Ano de comparação"></select></span>
+    <label id="escRow" hidden><input type="checkbox" id="escChk"> Escolas e creches</label>
+    <label id="orthoRow" hidden><input type="checkbox" id="ortho"> Copas em foto aérea (zoom 17+)</label>
+    <label id="matoRow" hidden><input type="checkbox" id="matoChk"> Incluir vegetação baixa</label>
+   </div>
+   <div id="map" role="application" aria-label="Mapa interativo da sombra nas ruas de João Pessoa"></div>
+   <div class="slider noprint"><button id="play" aria-label="Reproduzir anos">▶</button><input type="range" id="sl" min="0" max="0" value="0" aria-label="Ano"><span class="ano" id="anoLbl"></span></div>
+  </div>
+  <div style="display:grid;gap:16px;align-content:start">
+   <div class="card cta" id="pedido">
+    <h2>Quer uma árvore na sua calçada?</h2>
+    <p>A Prefeitura faz uma vistoria e, se o local servir, o Viveiro Municipal planta. Você cuida da muda.</p>
+    <ol><li>Preencha o formulário no Portal do Cidadão.</li><li>Envie uma foto ampla da calçada (passagem, muros, garagens, postes e fiação).</li><li>Aguarde a vistoria da equipe técnica.</li><li>Se aprovado, o plantio é feito e você cuida (rega e proteção).</li></ol>
+    <a class="btn" id="ctaBtn" href="#" target="_blank" rel="noopener">Solicitar uma árvore</a>
+    <p style="margin:10px 0 0;font-size:.82rem">O envio não garante o plantio: a aprovação, a espécie e a quantidade dependem da avaliação técnica. Em geral, a calçada precisa ter cerca de 1,9 m ou mais para uma árvore de pequeno porte e 1,20 m livres para pedestres.</p>
+   </div>
+   <div class="card" id="rua" aria-live="polite"><h2>Sua rua</h2><p class="mut" style="margin:0">Digite o nome da sua rua ou do seu bairro na busca, no alto da página, para ver como ela está e como pedir uma árvore. Ou toque em um trecho no mapa.</p></div>
+   <div class="card noprint" id="info"><h2>Trecho selecionado</h2><small>Toque em uma rua no mapa para ver a cobertura em cada ano.</small></div>
+  </div>
+ </section>
+
+ <section class="grid g2" id="bairros">
+  <div class="card"><h2>Evolução da boa sombra <small id="evoSub"></small></h2><div id="chart"></div></div>
+  <div class="card"><h2>Distribuição</h2><div class="donutw"><div id="donut"></div><div class="leg" id="donutLeg"></div></div></div>
+  <div class="card"><h2 id="rankT">Bairros</h2><ul class="rank" id="rank"></ul></div>
+ </section>
+
+ <section class="grid g3">
+  <div class="card" id="escolas"><h2>Escolas e creches</h2><p class="mut" style="margin:0">Sem dados. Coloque <code>equipamento_educacao</code> em <code>data/shp/</code> e rode o pipeline.</p></div>
+  <div class="card" id="equi"><h2>Equidade</h2><p class="mut" style="margin:0">Sem dados de comunidades. Coloque <code>favela_comunidade_urbana</code> em <code>data/shp/</code> e rode o pipeline.</p></div>
+ </section>
+
+ <section class="grid g3">
+  <div class="card" id="cau"><h2>Áreas verdes no CAU <small>só João Pessoa</small></h2><p class="mut" style="margin:0">Carregando…</p></div>
+  <div class="card" id="limiares">
+   <h2>Como ler as cores</h2>
+   <p style="margin:0 0 8px">Cada trecho de rua de 80 m recebe a % de cobertura de copa medida pelo satélite. A referência internacional <b>3-30-300</b> (Konijnendijk, 2022) propõe 30% de copa por bairro; por isso o padrão aqui é <b>boa sombra a partir de 30%</b> e <b>parcial a partir de 15%</b>.</p>
+   <div class="row"><span class="field">Boa ≥ <input id="lgIn" type="number" min="5" max="90" value="30" aria-label="Limite de boa sombra em porcentagem">%</span><span class="field">Parcial ≥ <input id="lpIn" type="number" min="1" max="60" value="15" aria-label="Limite de sombra parcial em porcentagem">%</span><button id="lReset">Padrão</button></div>
+   <small>O satélite tem 10 m por pixel e tende a subestimar árvores em ruas estreitas. Mude os limites para ver o efeito. As fotos aéreas de 10 cm, nas áreas piloto, servem de conferência.</small>
+  </div>
+ </section>
+
+ <section id="argumentos">
+  <h2 style="font-size:1.1rem;margin:22px 0 6px">Por que investir em arborização</h2>
+  <details open><summary>O que o Plano Diretor já promete sobre árvores (PAI)</summary><ul>
+<li><b>Plantio em vias, parques e canteiros</b> (Eixo Ambiental, diretriz 1, ação f): meta de <b>aumentar em até 50% a arborização</b> do município. Prioridade média, médio prazo (4 a 7 anos). Custo estimado no documento: R$ 3,14 bilhões. Indicador oficial: número de árvores plantadas por ano. Responsável principal: Semam.</li>
+<li><b>Programa de arborização das vias públicas</b> (Eixo de Mobilidade, diretriz 24, ação h): <b>prioridade alta, mas prazo longo</b>. Custo só administrativo, a cargo de Semam, Semob e Seplan. Pedido: antecipar para o curto prazo (até 3 anos).</li>
+<li><b>Plano de Arborização Municipal</b> (Eixo Ambiental, diretriz 3, ação c): com indicação de espécies e o plantio como condição para o habite-se. Prioridade média, longo prazo.</li>
+<li><b>Calçadas</b> (Eixo de Mobilidade): programa de implantação e revitalização de calçadas e norma de padronização, ambos de prioridade alta e curto prazo (até 3 anos). A arborização precisa entrar nesses projetos.</li>
+<li>O diagnóstico comunitário do plano registra “pouca arborização” como problema em vários quadros de bairros.</li>
+<li>Fonte: Plano de Ação e Investimentos, versão R07 (nov/2022), e Diretrizes e Propostas (fev/2022). Confira se a lei sancionada manteve as ações, os números e os prazos.</li></ul></details>
+  <details open><summary>Plano Diretor (PDMJP)</summary><ul>
+<li>Entre as metas da revisão estão o aumento das áreas verdes e permeáveis, para combater ilhas de calor e inundações, e a ampliação das áreas de circulação de pedestres (Cartilha do PDMJP).</li>
+<li>Minuta de lei (jun/2022): art. 7º (ampliar áreas livres e verdes; evitar impermeabilização excessiva); art. 8º (conforto ambiental, adaptação climática e áreas verdes distribuídas para a população de todas as áreas); art. 36 (calçadas como principal sistema de circulação, com requalificação e ampliação); art. 17 (prioridade a áreas de urbanização precária e ZEIS).</li>
+<li><b>Como cobrar:</b> o art. 9º, §3º manda executar o plano pelo PAI, com 172 ações, custos, responsáveis e prazos; o art. 34, IX prevê monitoramento público com o CDU. Peça a lista das ações de arborização do PAI e o status de cada uma. Numeração conforme a minuta de junho de 2022.</li></ul></details>
+  <details><summary>Programa João Pessoa Sustentável (BID)</summary><ul>
+<li>O objetivo geral é o desenvolvimento urbano sustentável pelo fortalecimento do planejamento e da gestão urbana e por intervenções integrais para famílias vulneráveis. Este mapa é um instrumento de planejamento, com dados abertos e repetíveis (Regulamento Operacional, item 3.1).</li>
+<li>Um piloto de arborização de calçadas nas comunidades do Complexo Beira Rio e da Via Férrea se encaixa nos objetivos de replicação em assentamentos informais. O projeto do Beira Rio prevê parque linear no Jaguaribe (item 7.2).</li>
+<li>Parâmetros de qualquer novo projeto: projeto executivo, licença ambiental, consulta pública, horizonte de 25 anos, taxa de 12% a.a., VPL ≥ 0 e relação benefício/custo ≥ 1 (itens 7.1 e 7.3).</li>
+<li><b>Limite:</b> o programa soma US$ 200 mi já distribuídos por componentes, e arborização da cidade toda não consta no escopo original. Caminhos realistas: incluir nos projetos já previstos, usar a contrapartida municipal e levar a meta ao PAI, PPA e LOA.</li></ul></details>
+  <details><summary>Calçadas e acessibilidade</summary><ul>
+<li>A cartilha “Calçada para João Pessoa(s)” (Seplan e LACESSE/UFPB, 2025) diz que calçadas acessíveis devem ser confortáveis, inclusive sob o sol, e podem ser arborizadas.</li>
+<li>A calçada nova precisa de faixa livre de pelo menos 1,20 m e faixa de serviço de pelo menos 0,75 m: no mínimo 1,95 m (Lei 15.197/2024, anexo III). A árvore entra na faixa de serviço.</li>
+<li>Árvores de pequeno porte cabem em calçadas a partir de cerca de 1,9 m; as de médio porte pedem mais de 2,2 m (Cartilha de Arborização da Semam). Em calçadas mais estreitas, a solução passa por alargar a calçada.</li></ul></details>
+  <details><summary>Dados locais</summary><ul>
+<li>O Censo 2022 (IBGE) contou 833.932 moradores. Destes, 162.069 têm até 14 anos e 123.614 têm 60 anos ou mais: 34% da população está em faixas etárias mais sensíveis ao calor intenso.</li>
+<li>Reportagem do jornal A União aponta variação de até 6 °C entre bairros de João Pessoa por efeito de ilhas de calor.</li>
+<li>A Prefeitura mantém o programa João Pessoa + Verde e o Viveiro Municipal. Segundo o jornal A União, cada calçamento concluído já é entregue com árvore à frente, desde que o morador aceite. Vale pedir que isso vire meta pública, com número por bairro.</li>
+<li>A Semam tem Plano de Arborização Urbana de 2012 e uma Cartilha de Arborização: peça atualização, metas e o cadastro de árvores (Lei de Acesso à Informação).</li></ul></details>
+  <details><summary>Como os dados foram feitos e limites</summary><ul>
+<li>Satélite Sentinel-2 (10 m por pixel), sempre de setembro a dezembro, e ruas oficiais da Prefeitura (ou OpenStreetMap). Mede cobertura de copa, não árvores individuais.</li>
+<li>Diferenças menores que 10 pontos entre anos são tratadas como estáveis, pois podem ser ruído de nuvem ou chuva.</li>
+<li>As copas em círculo nas fotos aéreas de 10 cm separam árvore (copa escura) de vegetação baixa pelo brilho. É uma estimativa, sem dados de altura. O cadastro de árvores da Prefeitura (SIGWeb) ou um levantamento a laser (LiDAR) melhoraria muito a separação.</li>
+<li>Os círculos são representação da copa; não são a sombra exata, que varia com hora e estação.</li></ul></details>
+  <p class="mut" id="meta"></p>
+ </section>
+</main></div>
+<script>
+const URL_SOLICITAR="https://prefeituraconectada.joaopessoa.pb.gov.br/portal/"; // Portal do Cidadão (Prefeitura Conectada). Se existir link direto do serviço "Uma rua mais verde", troque aqui
+const $=id=>document.getElementById(id);
+const PAL={n:{g:"#2e9e5b",y:"#e8b923",r:"#d64545",p:"#e8590c",e:"#adb5bd",u:"#1c7ed6"},d:{g:"#0072B2",y:"#F0E442",r:"#D55E00",p:"#D55E00",e:"#999999",u:"#0072B2"}};
+let pal="n",fs=1,hc=false,sat=false,ano,base,modo="s",anos=[],cov={},lines=[],trees={},ortho=[],pv={},timer=null,LG=.30,LP=.15;
+let ruasIdx={},bairrosIdx={},ruaSel="",orthoAreas=null,escolas=[],escLayer=null;
+const cls=v=>v>=LG?"g":v>=LP?"y":"r",col=k=>PAL[pal][k],pc=v=>Math.round(v*100);
+function pref(k,v){try{if(v===undefined)return localStorage.getItem("ms_"+k);localStorage.setItem("ms_"+k,v)}catch(e){return null}}
+function ui(){document.documentElement.style.fontSize=fs*100+"%";document.body.classList.toggle("hc",hc);$("hc").setAttribute("aria-pressed",hc);$("dl").setAttribute("aria-pressed",pal==="d");$("b1").setAttribute("aria-pressed",sat)}
+fs=+pref("fs")||1;hc=pref("hc")==="1";pal=pref("pal")||"n";
+$("ctaTop").href=URL_SOLICITAR;$("ctaBtn").href=URL_SOLICITAR;
+const titulo=s=>(s||"").toLowerCase().replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()).replace(/ (De|Da|Do|Das|Dos|E) /g,x=>x.toLowerCase());
+const ALIAS={av:"avenida",rod:"rodovia",tv:"travessa",trav:"travessa",pc:"praca",pca:"praca",al:"alameda",r:"rua"};
+const norm=s=>(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[.,]/g," ").split(/\s+/).filter(Boolean).map(w=>ALIAS[w]||w).join(" ");
+const nomeEsc=n=>{const p=(n||"").split(" ");return (p[0].length<=5?p[0]:titulo(p[0]))+" "+titulo(p.slice(1).join(" "))};
+
+/* ---------- mapa ---------- */
+const map=L.map("map",{preferCanvas:true}).setView([-7.12,-34.86],12);
+const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"});
+const esri=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Imagens: Esri, Maxar, Earthstar Geographics"});
+function setBase(){map.removeLayer(sat?osm:esri);(sat?esri:osm).addTo(map).bringToBack();ui()}
+map.createPane("sombra").style.zIndex=380;
+const rb=L.canvas({pane:"sombra"}),blobs=L.layerGroup().addTo(map),destaque=L.layerGroup().addTo(map);
+function desenha(){
+  blobs.clearLayers();const b=map.getBounds().pad(.1),z=map.getZoom(),t=trees[ano];
+  if(modo==="s"&&t&&z>=16){let n=0;
+    for(const[lon,lat,r]of t){
+      if(!b.contains([lat,lon]))continue;if(++n>8000)break;
+      const j=Math.sin(lon*1e5)+Math.cos(lat*1e5);
+      L.circle([lat+j*1.5e-5,lon+j*1.2e-5],{renderer:rb,pane:"sombra",radius:r*(1+j*.12),stroke:false,fillColor:sat?"#9af0b8":"#14532d",fillOpacity:.3,interactive:false}).addTo(blobs)}}
+  if(ortho.length&&$("ortho").checked&&z>=17){let n=0;const mato=$("matoChk").checked;
+    for(const[lon,lat,r,tp]of ortho){
+      if(tp===1&&!mato)continue;if(!b.contains([lat,lon]))continue;if(++n>7000)break;
+      L.circle([lat,lon],{renderer:rb,pane:"sombra",radius:r,stroke:false,fillColor:tp===1?"#c6e05a":(sat?"#34d399":"#0b5d2e"),fillOpacity:tp===1?.4:.5,interactive:false}).addTo(blobs)}}
+  orthoUpdate();
+}
+map.on("moveend",desenha);$("ortho").onchange=desenha;$("matoChk").onchange=desenha;
+async function carregaTrees(){if(trees[ano]===undefined)trees[ano]=await fetch(`data/trees_${ano}.json`).then(r=>r.json()).catch(()=>null);desenha()}
+function orthoUpdate(){
+  if(!orthoAreas)return;const on=$("ortho").checked;
+  if(on&&!map.hasLayer(orthoAreas))orthoAreas.addTo(map);if(!on&&map.hasLayer(orthoAreas))map.removeLayer(orthoAreas);
+}
+async function carregaOrtho(){
+  ortho=await fetch("data/trees_ortho.json").then(r=>r.ok?r.json():[]).catch(()=>[]);
+  const ar=await fetch("data/ortho_areas.json").then(r=>r.ok?r.json():[]).catch(()=>[]);
+  window.orthoRuas=await fetch("data/ortho_ruas.json").then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if(ortho.length){orthoAreas=L.layerGroup(ar.map(b=>L.rectangle(b,{color:"#6d28d9",weight:1,dashArray:"4 4",fill:false}).bindTooltip("Área com foto aérea de 10 cm")));$("orthoRow").hidden=false;$("matoRow").hidden=false;$("ortho").checked=true}
+  desenha();
+}
+
+/* ---------- cálculo e painéis ---------- */
+function calcPv(){anos.forEach(a=>pv[a]=cov[a].filter(v=>v>=LG).length/cov[a].length*100)}
+function suave(p){let d=`M${p[0][0]},${p[0][1]}`;for(let i=0;i<p.length-1;i++){const a=p[i-1]||p[i],b=p[i],c=p[i+1],e=p[i+2]||c;d+=` C${b[0]+(c[0]-a[0])/6},${b[1]+(c[1]-a[1])/6} ${c[0]-(e[0]-b[0])/6},${c[1]-(e[1]-b[1])/6} ${c[0]},${c[1]}`}return d}
+function grafico(){
+  const W=560,H=190,pl=34,pr=14,pt=22,pb=28,vs=anos.map(a=>pv[a]),mx=Math.max(5,Math.ceil(Math.max(...vs)*1.25/5)*5);
+  const X=i=>anos.length<2?W/2:pl+i*(W-pl-pr)/(anos.length-1),Y=v=>pt+(H-pt-pb)*(1-v/mx),pts=vs.map((v,i)=>[X(i),Y(v)]);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolução do percentual de trechos com boa sombra" style="width:100%;height:auto"><defs><linearGradient id="gr" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col("g")}" stop-opacity=".35"/><stop offset="1" stop-color="${col("g")}" stop-opacity="0"/></linearGradient></defs>`;
+  for(let k=0;k<=4;k++){const v=mx*k/4,y=Y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity=".1" stroke-dasharray="3 4"/><text x="${pl-6}" y="${y+4}" text-anchor="end">${Math.round(v)}%</text>`}
+  if(pts.length>1){s+=`<path d="${suave(pts)} L${pts[pts.length-1][0]},${Y(0)} L${pts[0][0]},${Y(0)} Z" fill="url(#gr)"/><path d="${suave(pts)}" fill="none" stroke="${col("g")}" stroke-width="3" stroke-linecap="round"/>`}
+  anos.forEach((a,i)=>{const on=a===ano;s+=`<g data-a="${a}" tabindex="0" role="button" aria-label="${a}: ${vs[i].toFixed(1)}% com boa sombra" style="cursor:pointer"><circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="${on?7:4.5}" fill="${on?col("g"):"var(--card)"}" stroke="${col("g")}" stroke-width="3"/><text x="${pts[i][0]}" y="${H-8}" text-anchor="middle" style="${on?"font-weight:800;fill:var(--tx)":""}">${a}</text>${on?`<text x="${pts[i][0]}" y="${pts[i][1]-13}" text-anchor="middle" style="font-weight:800;fill:var(--tx);font-size:12px">${vs[i].toFixed(1)}%</text>`:""}<rect x="${pts[i][0]-18}" y="0" width="36" height="${H}" fill="transparent"/></g>`});
+  $("chart").innerHTML=s+"</svg>";$("chart").querySelectorAll("g[data-a]").forEach(g=>{const f=()=>vaiAno(+g.dataset.a);g.onclick=f;g.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();f()}}});
+  const d=pv[ano]-pv[base];$("evoSub").textContent=anos.length>1?`${base}→${ano}: ${d>=0?"+":""}${d.toFixed(1).replace(".",",")} pontos`:"";
+}
+function rosca(T,n,S){
+  let off=25,s=`<svg viewBox="0 0 42 42" width="150" height="150" role="img" aria-label="Distribuição dos trechos"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="currentColor" stroke-opacity=".08" stroke-width="6"/>`;
+  S.forEach(([k])=>{const p=(T[k]||0)/n*100;s+=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="${col(k)}" stroke-width="6" stroke-dasharray="${p} ${100-p}" stroke-dashoffset="${off}"/>`;off-=p});
+  $("donut").innerHTML=s+`<text x="21" y="22.5" text-anchor="middle" style="font-size:7px;font-weight:800;fill:var(--tx)">${S[0]?Math.round((T[S[0][0]]||0)/n*100):0}%</text></svg>`;
+  $("donutLeg").innerHTML=S.map(([k,t])=>`<div><i style="background:${col(k)}"></i>${t} <b>${Math.round((T[k]||0)/n*100)}%</b></div>`).join("");
+}
+function kpi(i,ic,v,rot,sub){return `<div class="kpi"><div class="kh"><span>${rot}</span><i>${ic}</i></div><b>${v}</b>${sub||""}</div>`}
+function atualiza(){
+  calcPv();const C=cov[ano],B=cov[base],T={},R={};
+  lines.forEach((l,i)=>{
+    let k;if(modo==="s")k=cls(C[i]);else{const d=C[i]-B[i];k=d<=-.1?"p":d>=.1?"u":"e"}
+    l.setStyle({color:col(k),weight:sat?4:3});T[k]=(T[k]||0)+1;
+    if(l.bairro){const r=R[l.bairro]??={n:0,g:0,y:0,r:0,a:0,b:0};r.n++;r[cls(C[i])]++;if(C[i]>=LG)r.a++;if(B[i]>=LG)r.b++}
+  });
+  const n=lines.length,P=k=>Math.round((T[k]||0)/n*100),d=pv[ano]-pv[base];
+  const chip=(v,inv)=>`<span class="pill ${(inv?v>0:v<0)?"neg":""}">${v>=0?"▲":"▼"} ${Math.abs(v).toFixed(1).replace(".",",")} pontos desde ${base}</span>`;
+  const S=modo==="s"?[["g","com boa sombra"],["y","sombra parcial"],["r","sem sombra"]]:[["p","perderam sombra"],["e","estáveis"],["u","ganharam sombra"]];
+  const ke=escolas.filter(e=>e.c[String(ano)]!==undefined),kb=ke.filter(e=>e.c[String(ano)]<LP);
+  $("kpis").innerHTML=kpi(0,"🌳",P(S[0][0])+"%",S[0][1],modo==="s"&&anos.length>1?chip(d,false):"")+kpi(1,"🌤",P(S[1][0])+"%",S[1][1])+kpi(2,"☀",P(S[2][0])+"%",S[2][1])+
+    (ke.length?kpi(3,"🏫",Math.round(kb.length/ke.length*100)+"%","escolas com pouca sombra",`<small>${kb.length} de ${ke.length} no entorno de 150 m</small>`):kpi(3,"📍",n.toLocaleString("pt-BR"),"trechos de rua analisados",`<small>cerca de 80 m cada</small>`));
+  rosca(T,n,S);
+  $("resumo").textContent=modo==="s"?`Em ${ano}, ${P("g")}% dos trechos de rua analisados têm boa sombra (cobertura de copa de ${pc(LG)}% ou mais), ${P("y")}% têm sombra parcial e ${P("r")}% estão sem sombra.`:`De ${base} para ${ano}, ${P("p")}% dos trechos perderam sombra, ${P("u")}% ganharam e ${P("e")}% ficaram estáveis.`;
+  $("leg").textContent=modo==="s"?`Verde ≥${pc(LG)}% · Amarelo ≥${pc(LP)}% · Vermelho abaixo`:"Azul ganhou · Cinza estável · Laranja perdeu";
+  $("anoLbl").textContent=ano;$("sl").value=anos.indexOf(ano);
+  $("rankT").textContent=modo==="s"?"Ranking por bairro":"Bairros que mais perderam sombra";
+  const arr=Object.entries(R).map(([nm,o])=>({nm,o,g:o.g/o.n*100,d:(o.a-o.b)/o.n*100}));
+  arr.sort(modo==="s"?(x,y)=>y.g-x.g:(x,y)=>x.d-y.d);
+  $("rank").innerHTML=arr.length?arr.slice(0,12).map((x,i)=>modo==="s"
+    ?`<li><div class="t"><span>${i+1}. <b>${x.nm}</b></span><span class="mut">${Math.round(x.g)}% boa</span></div><div class="bar" aria-hidden="true"><i style="width:${x.g}%;background:${col("g")}"></i><i style="width:${x.o.y/x.o.n*100}%;background:${col("y")}"></i><i style="width:${x.o.r/x.o.n*100}%;background:${col("r")}"></i></div></li>`
+    :`<li><div class="t"><span>${i+1}. <b>${x.nm}</b></span><span class="mut">${x.d>0?"+":""}${Math.round(x.d)} pontos</span></div></li>`).join(""):'<li><small>Sem nome de bairro nos dados. Coloque <code>bairros</code> em <code>data/shp/</code> e rode o pipeline.</small></li>';
+  grafico();hashSet();equidade();escolasUpdate(false);
+}
+function vaiAno(a){ano=a;atualiza();carregaTrees()}
+function modoSet(m){modo=m;$("m1").setAttribute("aria-pressed",m==="s");$("m2").setAttribute("aria-pressed",m==="m");$("baseRow").hidden=m==="s";atualiza();desenha()}
+function hashSet(){history.replaceState(null,"",`#a=${ano}&m=${modo}&b=${base}&lg=${pc(LG)}&lp=${pc(LP)}`+(ruaSel?`&r=${encodeURIComponent(ruaSel)}`:""))}
+
+/* ---------- busca por rua e bairro ---------- */
+function indexa(){
+  ruasIdx={};bairrosIdx={};
+  lines.forEach((l,i)=>{
+    if(l.nome)(ruasIdx[norm(l.nome)]??={nome:l.nome,ix:[],t:"r"}).ix.push(i);
+    if(l.bairro)(bairrosIdx[norm(l.bairro)]??={nome:l.bairro,ix:[],t:"b"}).ix.push(i);
+  });
+  if(!Object.keys(ruasIdx).length)$("rua").innerHTML='<h2>Sua rua</h2><p style="margin:0"><b>Os dados carregados não trazem nome de rua.</b> Apague <code>data/segments.geojson</code> e <code>data/cov_*.json</code>, coloque os shapefiles da Prefeitura em <code>data/shp/</code> e rode <code>python pipeline.py</code> de novo. A busca por rua depende desse passo.</p>';
+}
+$("q").oninput=()=>{
+  const t=norm($("q").value).split(" ").filter(Boolean),ul=$("sug");ul.innerHTML="";
+  if(t.join("").length<2)return;
+  if(!Object.keys(ruasIdx).length&&!Object.keys(bairrosIdx).length){ul.innerHTML='<li><small style="padding:8px 12px;display:block">Os dados não trazem nomes de rua nem de bairro. Veja o aviso em “Sua rua”.</small></li>';return}
+  const ach=[];
+  for(const [k,v] of Object.entries(bairrosIdx))if(t.every(w=>k.includes(w)))ach.push([k,v,0]);
+  for(const [k,v] of Object.entries(ruasIdx))if(t.every(w=>k.includes(w)))ach.push([k,v,1]);
+  ach.sort((a,b)=>a[2]-b[2]||a[0].length-b[0].length);
+  ach.slice(0,9).forEach(([k,v])=>{const li=document.createElement("li"),b=document.createElement("button");
+    b.innerHTML=`<span>${v.t==="b"?"Bairro ":""}${titulo(v.nome)}</span><small>${v.t==="b"?v.ix.length+" trechos":(v.ix[0]!==undefined?(lines[v.ix[0]].bairro||""):"")}</small>`;
+    b.onclick=()=>escolheRua(k,v.t);li.appendChild(b);ul.appendChild(li)});
+  if(!ach.length)ul.innerHTML='<li><small style="padding:8px 12px;display:block">Nenhuma rua ou bairro encontrado. Tente só uma parte do nome.</small></li>';
+};
+document.addEventListener("click",e=>{if(!e.target.closest(".sbox"))$("sug").innerHTML=""});
+function escolheRua(k,t){
+  const r=(t==="b"?bairrosIdx:ruasIdx)[k];if(!r)return;ruaSel=(t==="b"?"b:":"")+k;$("q").value=titulo(r.nome);$("sug").innerHTML="";
+  destaque.clearLayers();
+  r.ix.forEach(i=>L.polyline(lines[i].getLatLngs(),{weight:11,color:"#6d28d9",opacity:.6,interactive:false}).addTo(destaque).bringToBack());
+  map.fitBounds(L.featureGroup(r.ix.map(i=>lines[i])).getBounds().pad(.3),{maxZoom:t==="b"?15:18});
+  const med=a=>r.ix.reduce((s,i)=>s+cov[a][i],0)/r.ix.length,mm=med(ano),n=r.ix.length;
+  const bairros=t==="b"?"":[...new Set(r.ix.map(i=>lines[i].bairro).filter(Boolean))].slice(0,3).join(", ");
+  const sem=r.ix.filter(i=>cov[ano][i]<LP).length/n*100;
+  const diag=mm>=LG?`${t==="b"?"O bairro":"Sua rua"} já tem boa sombra. Ajude a cuidar das árvores existentes.`:mm>=LP?`${t==="b"?"O bairro":"Sua rua"} tem sombra parcial: há espaço para mais árvores.`:`${t==="b"?"O bairro":"Sua rua"} tem pouca sombra: boa parte está exposta ao sol.`;
+  const o=(window.orthoRuas||[]).filter(x=>t==="r"&&norm(x.n)===k),om=o.length?pc(o.reduce((s,x)=>s+x.cob,0)/o.length):null;
+  const txt=`${titulo(r.nome)}${bairros?" ("+bairros+")":""}: cobertura de copa de ${pc(mm)}% em ${ano}. Veja no Mapa de Sombras:`;
+  const el=$("rua");el.dataset.txt=txt;
+  el.innerHTML=`<h2>${titulo(r.nome)}</h2><small>${bairros||(t==="b"?"Bairro":"Bairro não identificado")} · cerca de ${Math.round(n*80/10)*10} m mapeados</small>
+  <p style="margin:8px 0">Em ${ano}, a cobertura média de copa é de <b>${pc(mm)}%</b> e ${Math.round(sem)}% dos trechos estão sem sombra. ${diag}</p>
+  <small>${anos.map(a=>a+": "+pc(med(a))+"%").join(" · ")}</small>
+  ${om!==null?`<p style="margin:8px 0"><small>Medida em foto aérea de 10 cm: ${om}% de copa de árvore nos trechos das áreas piloto.</small></p>`:""}
+  <a class="btn" style="margin-top:12px" href="${URL_SOLICITAR}" target="_blank" rel="noopener">🌱 Solicitar uma árvore na minha calçada</a>
+  <div class="row"><button id="shRua">Compartilhar</button><button id="limpaRua">Limpar</button></div>`;
+  $("shRua").onclick=()=>$("share").click();
+  $("limpaRua").onclick=()=>{ruaSel="";destaque.clearLayers();$("q").value="";$("rua").innerHTML='<h2>Sua rua</h2><p class="mut" style="margin:0">Digite o nome da sua rua ou do seu bairro na busca, no alto da página.</p>';hashSet()};
+  hashSet();$("mapa").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+/* ---------- equidade, escolas, CAU ---------- */
+function equidade(){
+  const C=cov[ano];let a=0,na=0,b=0,nb=0;
+  lines.forEach((l,i)=>{if(l.k){na++;if(C[i]>=LG)a++}else{nb++;if(C[i]>=LG)b++}});
+  if(!na)return;
+  $("equi").innerHTML=`<h2>Equidade</h2><p style="margin:0 0 8px">Em ${ano}, <b>${Math.round(a/na*100)}%</b> dos trechos de rua em comunidades urbanas têm boa sombra, contra <b>${Math.round(b/nb*100)}%</b> no restante da cidade.</p><small>Comunidades: favelas e assentamentos da base IBGE/Prefeitura.</small>`;
+}
+async function carregaEscolas(){
+  escolas=await fetch("data/escolas.json").then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if(!escolas.length)return;
+  $("escRow").hidden=false;
+  escLayer=L.layerGroup(escolas.map(e=>{
+    const m=L.circleMarker([e.lat,e.lon],{radius:6,weight:2,color:"#fff",fillOpacity:1,fillColor:"#999"});
+    m.on("click",()=>{const v=e.c[String(ano)];$("info").innerHTML=`<h2>${nomeEsc(e.n)}</h2><small>${e.b}</small><p style="margin:6px 0 0">${v===undefined?"Sem medida neste ano.":`Cobertura de copa nas ruas em volta (150 m), em ${ano}: <b>${pc(v)}%</b>.`}</p>`});
+    e.m=m;return m}));
+  $("escChk").onchange=()=>{if($("escChk").checked)escLayer.addTo(map);else map.removeLayer(escLayer)};
+  escolasUpdate(true);
+}
+function escolasUpdate(refaz){
+  if(!escolas.length)return;
+  const a=String(ano);
+  escolas.forEach(e=>e.m.setStyle({fillColor:e.c[a]===undefined?"#999":col(cls(e.c[a]))}));
+  const ok=escolas.filter(e=>e.c[a]!==undefined);if(!ok.length)return;
+  const baixo=ok.filter(e=>e.c[a]<LP),pior=[...ok].sort((x,y)=>x.c[a]-y.c[a]).slice(0,8);
+  $("escolas").innerHTML=`<h2>Escolas e creches municipais</h2><p style="margin:0 0 6px">Em ${ano}, <b>${Math.round(baixo.length/ok.length*100)}%</b> (${baixo.length} de ${ok.length}) têm menos de ${pc(LP)}% de cobertura de copa nas ruas em volta, num raio de 150 m.</p><ul class="lista">${pior.map(e=>`<li><span>${nomeEsc(e.n)}</span><small>${e.b} · ${pc(e.c[a])}%</small></li>`).join("")}</ul><small>As 8 com menos sombra. É por onde crianças e famílias chegam e saem todo dia.</small>`;
+  if(refaz)atualiza();
+}
+async function carregaCAU(){
+  const d=await fetch("data/cau_joao_pessoa.json").then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if(!d.length){$("cau").innerHTML='<h2>Áreas verdes no CAU <small>só João Pessoa</small></h2><p class="mut" style="margin:0">Sem dados do CAU.</p>';return}
+  const pub=d.filter(x=>x.sit==="Publicada"),ha=pub.reduce((s,x)=>s+(x.area_m2||0),0)/1e4,fmt=n=>n.toLocaleString("pt-BR",{maximumFractionDigits:1});
+  $("cau").innerHTML=`<h2>Áreas verdes no CAU <small>só João Pessoa</small></h2>
+  <p style="margin:0 0 6px"><b>${pub.length}</b> áreas publicadas, somando <b>${fmt(ha)} ha</b>. Outras ${d.length-pub.length} estão em rascunho (nascentes e afluentes). Em comparação, a Prefeitura lista 215 praças em seu cadastro.</p>
+  <ul class="lista">${pub.sort((a,b)=>(b.area_m2||0)-(a.area_m2||0)).slice(0,7).map(x=>`<li><span>${x.n}</span><small>${fmt((x.area_m2||0)/1e4)} ha</small></li>`).join("")}</ul>
+  <small>Fonte: Cadastro Ambiental Urbano, registros até jan/2026. O arquivo público não informa o município em 96% das linhas; aqui entram só registros cuja descrição liga claramente a João Pessoa, e não há coordenadas para mapear.</small>`;
+}
+
+/* ---------- controles ---------- */
+$("m1").onclick=()=>modoSet("s");$("m2").onclick=()=>modoSet("m");
+$("b1").onclick=()=>{sat=!sat;setBase();atualiza();desenha()};
+$("sl").oninput=e=>vaiAno(anos[+e.target.value]);
+$("baseSel").onchange=e=>{base=+e.target.value;atualiza()};
+$("play").onclick=()=>{
+  if(timer){clearInterval(timer);timer=null;$("play").textContent="▶";return}
+  $("play").textContent="⏸";timer=setInterval(()=>vaiAno(anos[(anos.indexOf(ano)+1)%anos.length]),1600)};
+$("fm").onclick=()=>{fs=Math.max(.85,fs-.1);pref("fs",fs);ui()};$("fp").onclick=()=>{fs=Math.min(1.5,fs+.1);pref("fs",fs);ui()};
+$("hc").onclick=()=>{hc=!hc;pref("hc",hc?"1":"0");ui()};
+$("dl").onclick=()=>{pal=pal==="d"?"n":"d";pref("pal",pal);ui();atualiza();escolasUpdate(false)};
+function limiar(){const g=Math.min(90,Math.max(5,+$("lgIn").value||30)),p=Math.min(g-1,Math.max(1,+$("lpIn").value||15));LG=g/100;LP=p/100;$("lgIn").value=g;$("lpIn").value=p;atualiza();desenha()}
+$("lgIn").onchange=limiar;$("lpIn").onchange=limiar;$("lReset").onclick=()=>{$("lgIn").value=30;$("lpIn").value=15;limiar()};
+const link=()=>location.href.split("#")[0]+`#a=${ano}&m=${modo}&b=${base}&lg=${pc(LG)}&lp=${pc(LP)}`+(ruaSel?`&r=${encodeURIComponent(ruaSel)}`:"");
+$("share").onclick=async()=>{
+  const txt=(ruaSel&&$("rua").dataset.txt)||$("resumo").textContent,d={title:document.title,text:txt,url:link()};
+  if(navigator.share){try{await navigator.share(d);return}catch(e){}}
+  try{await navigator.clipboard.writeText(link());$("resumo").textContent+=" (Link copiado.)"}catch(e){prompt("Copie o link:",link())}};
+$("zap").onclick=()=>open("https://wa.me/?text="+encodeURIComponent(((ruaSel&&$("rua").dataset.txt)||$("resumo").textContent)+" "+link()),"_blank","noopener");
+$("imp").onclick=()=>print();
+addEventListener("beforeprint",()=>{document.querySelectorAll("details").forEach(d=>d.open=true);$("hoje").textContent=new Date().toLocaleDateString("pt-BR");$("lk").textContent=link()});
+const secs=["painel","mapa","pedido","bairros","escolas","cau","argumentos"];
+addEventListener("scroll",()=>{let at="painel";secs.forEach(s=>{const e=$(s);if(e&&e.getBoundingClientRect().top<160)at=s});document.querySelectorAll(".nav").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+at))},{passive:true});
+ui();
+(async()=>{
+  const [seg,meta]=await Promise.all([fetch("data/segments.geojson").then(r=>r.json()),fetch("data/anos.json").then(r=>r.json())]);
+  anos=meta.anos;
+  await Promise.all(anos.map(async a=>cov[a]=await fetch(`data/cov_${a}.json`).then(r=>r.json())));
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(+h.get("lg")>=5&&+h.get("lg")<=90){LG=+h.get("lg")/100;LP=Math.min(LG-.01,(+h.get("lp")||15)/100)}
+  $("lgIn").value=pc(LG);$("lpIn").value=pc(LP);
+  ano=anos.includes(+h.get("a"))?+h.get("a"):anos[anos.length-1];
+  base=anos.includes(+h.get("b"))?+h.get("b"):anos[0];
+  $("sl").max=anos.length-1;$("baseSel").innerHTML=anos.map(a=>`<option ${a===base?"selected":""}>${a}</option>`).join("");
+  L.geoJSON(seg,{style:()=>({weight:3,opacity:.9,color:"#999"}),onEachFeature:(f,l)=>{
+    const i=lines.push(l)-1;l.bairro=f.properties.b||"";l.nome=f.properties.n||"";l.k=f.properties.k||0;
+    l.on("click",()=>{$("info").innerHTML=`<h2>${titulo(l.nome)||"Trecho"}</h2><small>${l.bairro}</small><p style="margin:6px 0 0">${anos.map(a=>a+": "+pc(cov[a][i])+"%").join(" · ")}</p>`;if(l.nome)$("q").value="";});
+  }}).addTo(map);
+  $("meta").textContent=`Fonte: Sentinel-2 (ESA/Copernicus) e ruas da Prefeitura/OpenStreetMap. Atualizado em ${meta.atualizado}.`;
+  setBase();indexa();modoSet(h.get("m")==="m"?"m":"s");carregaTrees();
+  carregaEscolas();carregaCAU();carregaOrtho().then(()=>{const r=h.get("r");if(r)r.startsWith("b:")?escolheRua(r.slice(2),"b"):escolheRua(r,"r")});
+})().catch(e=>{$("kpis").innerHTML='<div class="card" style="grid-column:1/-1"><b>Não consegui carregar os dados.</b> Rode <code>python pipeline.py</code> e abra o site por um servidor (<code>python -m http.server</code>). Detalhe: '+e.message+'</div>'});
+</script></body></html>
